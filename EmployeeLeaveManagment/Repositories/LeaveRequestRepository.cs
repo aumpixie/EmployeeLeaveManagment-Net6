@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using EmployeeLeaveManagment.Contracts;
 using EmployeeLeaveManagment.Data;
 using EmployeeLeaveManagment.Models;
@@ -15,10 +16,11 @@ namespace EmployeeLeaveManagment.Repositories
         private readonly UserManager<Employee> userManager;
         private readonly ILeaveAllocationRepository leaveAllocationRepository;
         private readonly ILeaveTypeRepository leaveTypeRepository;
+        private readonly AutoMapper.IConfigurationProvider configurationProvider;
 
         public LeaveRequestRepository(ApplicationDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor,
             UserManager<Employee> userManager, ILeaveAllocationRepository leaveAllocationRepository,
-            ILeaveTypeRepository leaveTypeRepository) : base(context)
+            ILeaveTypeRepository leaveTypeRepository, AutoMapper.IConfigurationProvider configurationProvider) : base(context)
         {
             this.context = context;
             this.mapper = mapper;
@@ -26,30 +28,35 @@ namespace EmployeeLeaveManagment.Repositories
             this.userManager = userManager;
             this.leaveAllocationRepository = leaveAllocationRepository;
             this.leaveTypeRepository = leaveTypeRepository;
+            this.configurationProvider = configurationProvider;
         }
 
         public async Task CancelRequest(int leaveRequestId)
         {
             var leaveRequest = await GetAsync(leaveRequestId);
-            leaveRequest.Canceled = true;
-            await UpdateAsync(leaveRequest);
+            if(leaveRequest != null)
+            {
+                leaveRequest.Canceled = true;
+                await UpdateAsync(leaveRequest);
+            }
         }
 
         public async Task ChangedApprovalStatus(int leaveRequestId, bool approved)
         {
             var leaveRequest = await GetAsync(leaveRequestId);
-            leaveRequest.Approved = approved;
-            if (approved)
+            if(leaveRequest != null)
             {
-                var allocation = await leaveAllocationRepository.GetEmployeeAllocation(leaveRequest.RequestingEmployeeId, leaveRequest.LeaveTypeId);
-                int daysRequested = (int)(leaveRequest.EndDate - leaveRequest.StartDate).TotalDays;
-                allocation.NumberOfDays -= daysRequested;
+                leaveRequest.Approved = approved;
+                if (approved)
+                {
+                    var allocation = await leaveAllocationRepository.GetEmployeeAllocation(leaveRequest.RequestingEmployeeId, leaveRequest.LeaveTypeId);
+                    int daysRequested = (int)(leaveRequest.EndDate - leaveRequest.StartDate).TotalDays;
+                    allocation.NumberOfDays -= daysRequested;
 
-                await leaveAllocationRepository.UpdateAsync(allocation);
+                    await leaveAllocationRepository.UpdateAsync(allocation);
+                }
+                await UpdateAsync(leaveRequest);
             }
-
-            await UpdateAsync(leaveRequest);
-       
         }
 
         public async Task<bool> CreateLeaveRequest(LeaveRequestCreateVM model)
@@ -91,9 +98,11 @@ namespace EmployeeLeaveManagment.Repositories
             return model;
         }
 
-        public async Task<List<LeaveRequest>> GetAllAsync(string employeeId)
+        public async Task<List<LeaveRequestVM>> GetAllAsync(string employeeId)
         {
-            return await context.LeaveRequests.Where(q => q.RequestingEmployeeId == employeeId).ToListAsync();
+            return await context.LeaveRequests.Where(q => q.RequestingEmployeeId == employeeId)
+                .ProjectTo<LeaveRequestVM>(configurationProvider)
+                .ToListAsync();
         }
 
         public async Task<LeaveRequestVM?> GetLeaveRequestAsync(int? id)
@@ -115,7 +124,7 @@ namespace EmployeeLeaveManagment.Repositories
         {
             var user = await userManager.GetUserAsync(httpContextAccessor?.HttpContext?.User);
             var allocations = (await leaveAllocationRepository.GetEmployeeAllocations(user.Id)).LeaveAllocations;
-            var requests = mapper.Map<List<LeaveRequestVM>>(await GetAllAsync(user.Id));
+            var requests = await GetAllAsync(user.Id);
 
             var model = new EmployeeLeaveRequestViewVM(allocations, requests);
             return model;

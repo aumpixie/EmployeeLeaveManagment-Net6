@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EmployeeLeaveManagment.Data;
 using EmployeeLeaveManagment.Models;
-using AutoMapper;
 using EmployeeLeaveManagment.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using EmployeeLeaveManagment.Constants;
-using EmployeeLeaveManagment.Repositories;
+
 
 namespace EmployeeLeaveManagment.Controllers
 {

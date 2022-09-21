@@ -8,7 +8,7 @@ namespace EmployeeLeaveManagment.Contracts
         Task<bool> CreateLeaveRequest(LeaveRequestCreateVM model);
         Task<EmployeeLeaveRequestViewVM> GetMyLeaveDetails();
 
-        Task<List<LeaveRequest>> GetAllAsync(string employeeId);
+        Task<List<LeaveRequestVM>> GetAllAsync(string employeeId);
 
         Task ChangedApprovalStatus(int leaveRequestId, bool approved);
 

@@ -25,11 +25,11 @@
     <h4 class="alert-heading">@headingText</h4>
     <hr>
     <p>
-        <strong> Employee Name: </strong> @Model.Employee.FirstName @Model.Employee.LastName
+        <strong> Employee Name: </strong> @Model?.Employee?.FirstName @Model?.Employee?.LastName
     </p>
     <hr>
     <p>
-        <strong> Date Requested: </strong> @Html.DisplayFor(model => model.DateRequested);
+        <strong> Date Requested: </strong> @Html.DisplayFor(model => model.DateRequested)
     </p>
 </div>
 
@@ -64,16 +64,16 @@
     </dl>
 </div>
 <div class="btn-group" role="group" aria-label="Basic example">
-    @if(Model.Approved == null){
+    @if(Model?.Approved == null){
 
          <form asp-action="ApproveRequest">
-          <input name="Id" value="@Model.Id" type="hidden" />
+          <input name="Id" value="@Model?.Id" type="hidden" />
           <input name="approved" type="hidden" value="true" />
           <button type="submit" class="btn btn-success"> Approve </button>&nbsp;
           </form>
 
           <form asp-action="ApproveRequest">
-          <input name="Id" value="@Model.Id" type="hidden" />
+          <input name="Id" value="@Model?.Id" type="hidden" />
           <input name="approved" type="hidden" value="false" />
           <button type="submit" class="btn btn-danger"> Reject </button>&nbsp;
           </form>
